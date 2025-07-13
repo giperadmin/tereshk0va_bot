@@ -1,0 +1,70 @@
+import json, time, random
+from json import JSONDecodeError
+
+from filelock import FileLock, Timeout
+
+
+def save_as_json(data, filename: str = 'noname.json',
+                       folderpath: str = '../main/datas/',
+                       overwrite: bool = False
+                       ):
+    lock = FileLock(f'{folderpath}{filename}.lock')
+    try:
+        with lock.acquire(timeout=2):
+            try:
+                if not overwrite:
+                    with open(f'{folderpath}{filename}', 'r', encoding='utf-8') as file:
+                        database = json.load(file)
+                    if type(data) != dict or type(database) != dict:
+                        return "Пока можно дописывать только словари"
+                    database.update(data)
+                    with open(f'{folderpath}{filename}', 'w', encoding='utf-8') as file:
+                        # noinspection PyTypeChecker
+                        json.dump(database, file, ensure_ascii=False, indent=4)
+                    return "Данные в базе обновлены (дописаны)"
+
+                else:
+                    with open(f'{folderpath}{filename}', 'w', encoding='utf-8') as file:
+                        # noinspection PyTypeChecker
+                        json.dump(data, file, ensure_ascii=False, indent=4)
+                    return "Данные в базе заменены"
+
+            except FileNotFoundError:
+                with open(f'{folderpath}{filename}', 'w', encoding='utf-8') as file:
+                    # noinspection PyTypeChecker
+                    json.dump(data, file, ensure_ascii=False, indent=4)
+                return 'Создан новый файл'
+            except JSONDecodeError:
+                return 'Ошибка декодирования'
+            except:
+                return 'Неизвестная ошибка 1'
+    except:
+        return 'Неизвестная ошибка 2'
+
+
+def read_from_json(folderpath: str, filename: str) -> dict:
+    lock = FileLock(f'{folderpath}{filename}.lock')
+    try:
+        with lock.acquire(timeout=2):
+            try:
+                with open(f'{folderpath}{filename}', 'r', encoding='utf-8') as file:
+                    data = json.load(file)
+                if type(data) != dict:
+                    print('Это не словарь!')
+                return data
+            except FileNotFoundError:
+                print('FileNotFoundError в read_from_json')
+                return {'ошибка': 'FileNotFoundError'}
+            except JSONDecodeError:
+                print('JSONDecodeError в read_from_json')
+                return {'ошибка': 'JSONDecodeError в read_from_json'}
+            except Exception as e:
+                print(f"Произошла ошибка: {e}")
+                return {'ошибка': f"Произошла ошибка: {e}"}
+            except:
+                print('исключение в read_from_json')
+                return {'ошибка': 'исключение в read_from_json'}
+    except:
+        print('')
+        return {'ошибка': 'ПРЯМ СРАЗУ В read_from_json'}
+    pass
