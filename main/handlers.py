@@ -6,7 +6,7 @@ import utils.salat_name_generator as sng
 from utils.work_with_json import save_as_json, read_from_json
 from aiogram.filters import CommandStart, Command
 import keyboards as kb
-import time, random
+import time
 from datetime import datetime
 from utils.answers import responses_to_bad_reviews as rtbr
 from utils.middleware import  ThrottleMiddleware # Ограничение количества запросов от юзеров
