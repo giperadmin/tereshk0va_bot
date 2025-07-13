@@ -9,7 +9,7 @@ import keyboards as kb
 import time
 from datetime import datetime
 from utils.answers import responses_to_bad_reviews as rtbr
-from utils.middleware import  ThrottleMiddleware # Ограничение количества запросов от юзеров
+from utils.middleware import ThrottleMiddleware  # Ограничение количества запросов от юзеров
 
 router = Router(name='__name__')
 router.message.middleware(ThrottleMiddleware(rate_limit=1.5))
