@@ -11,9 +11,12 @@ from datetime import datetime
 from utils.answers import responses_to_bad_reviews as rtbr
 from utils.middleware import ThrottleMiddleware  # Ограничение количества запросов от юзеров
 
+RATE_LIMIT=0.01
+
+
 router = Router(name='__name__')
-router.message.middleware(ThrottleMiddleware(rate_limit=1.5))
-router.callback_query.middleware(ThrottleMiddleware(rate_limit=1.5))
+router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
+router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
 
 
 @router.message(CommandStart())
