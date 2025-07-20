@@ -8,7 +8,7 @@ import random
 
 async def responses_to_bad_reviews(state: FSMContext) -> str:
     data = await state.get_data()
-    fp = 'datas/'
+    fp = 'main/datas/'
     fn = 'responses.json'
 
     # Проверяем, что в data есть поле "remaining_responses"
