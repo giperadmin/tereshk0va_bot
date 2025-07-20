@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 async def salat_name_constructor(words: dict = None, composition: str = None) -> dict:
     """конструируем фразу из набранных слов"""
+    print('salat_name_constructor включился')
     singular = await singular_generator(composition)
     txt = (words.get("adjective") +
            " салат \"" + words.get("salats").capitalize() + "\"" + singular +
@@ -13,11 +14,13 @@ async def salat_name_constructor(words: dict = None, composition: str = None) ->
     words.clear()
     words["about"] = txt
     words["emodzi"] = emodzi
+    print('salat_name_constructor завершён')
     return words
 
 
 async def salat_name_generator(composition: str, state: FSMContext = None) -> dict:
     """генерация эпитета для салата, названия салата и созвездия на основе списков из файлов .json"""
+    print('сработал =async def salat_name_generator=')
     FP = 'datas/'  # путь к папке со списками слов
     DATA_SOURCE = {
         "adjective": "list_adjective.json",  # эпитеты
@@ -80,6 +83,7 @@ async def salat_name_generator_old(composition: str = "лук чеснок") -> 
         # print(word)
         salat_name_words.append(word)
     # print(salat_name_words)
+
     salat_name = (salat_name_words[0].lower() +
                   ' салат "' +
                   salat_name_words[1].capitalize() +
@@ -93,23 +97,46 @@ async def salat_name_generator_old(composition: str = "лук чеснок") -> 
     return salat_name
 
 
-async def singular_generator(composition: str) -> str:  # выявление особенных ингредиентов из состава салата
+async def singular_generator(composition: str) -> str:
+# выявление особенных ингредиентов из состава салата
+    print('singular_generator включился')
+    # todo в этом модуле возникает зависание
     # composition - это рецепт
     # Удаляем из текста рецепта всё, кроме букв и цифр:
     words = [re.sub(r'\W', '', word).lower() for word in composition.split()]  # это строка deepseek
+    print(words)
+
+    words = ['белокочанная', 'капуста', 'сладкий', 'болгарский', 'перец', 'ягодки', 'граната', 'авокадо', 'консервированный', 'нут']
     # получаем словарь с особенностями в дательном падеже
     fp = 'datas/'
     fn = 'words_singularity.json'
     singular_dict = {}
     singular_dict = await work_with_json.read_from_json(folderpath=fp, filename=fn)
+    print(f'len(singular_dict) = {len(singular_dict)}')
+    print(list(singular_dict.keys()))
+
+
     singular = set()  # создаём пустое множество особенностей
     # выхватываем случайные ингредиенты из рецепта,
     # и если им сопоставлены особенности, добавляем во множество особенностей:
+    counter = 0
     while len(singular) < 2:
+
         word = words[random.randint(0, len(words) - 1)]
+        print(word)
+        print(singular_dict.get(word))
         if word in singular_dict.keys():
             singular.add(singular_dict.get(word))
+
+        counter+=1
+        if counter > 100:
+            print('Не могу выявить особенности')
+            return ' '
+
     singular = ' с ' + singular.pop() + ' и ' + singular.pop()  # формируем фразу об особенностях салата
+
+
+    print('singular_generator завершён')
     return singular
 
 

@@ -11,7 +11,7 @@ from datetime import datetime
 from utils.answers import responses_to_bad_reviews as rtbr
 from utils.middleware import ThrottleMiddleware  # Ограничение количества запросов от юзеров
 
-RATE_LIMIT = 0.5
+RATE_LIMIT = 0.01
 
 router = Router(name='__name__')
 router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
@@ -28,6 +28,7 @@ async def intro(message: Message, state: FSMContext):
 
 @router.message(F.text == 'Придумай салат!')  # F-фильтром можно ловить всё, что пришлют, текст, медиа...
 async def test1(message: Message, bot: Bot, state: FSMContext):
+    print('Хэндлер по команде =Придумай салат!= включился')
     intro = 'Вот, какой изумительный рецепт я подобрала:\n👩🥘\n'
     composition = await salat_generator(with_titles=False)
     starline = '♡ ⋆｡˚ ✩° ｡⋆⛧⋆⁺ ｡˚⋆ ♡･ﾟ✧*・ﾟ✧ ♡⋆｡˚❁⋆｡°✩'
@@ -52,6 +53,7 @@ async def test1(message: Message, bot: Bot, state: FSMContext):
                        )
     txt = str(message.from_user.first_name) + ' получил рецепт салата'
     await bot.send_message(223852270, text=txt)
+    print('Хэндлер по команде =Придумай салат!= отработал')
 
 
 @router.message(F.text == 'Подобрать заправку')
