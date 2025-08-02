@@ -48,7 +48,7 @@ async def test1(message: Message, bot: Bot, state: FSMContext):
     current_date = datetime.now().strftime("%Y-%m-%d")
     await save_as_json(data,
                        filename=f'users_list_{current_date}.json',
-                       folderpath='main/datas/logs/',
+                       folderpath='datas/logs/',
                        overwrite=False
                        )
     txt = str(message.from_user.first_name) + ' получил рецепт салата'
