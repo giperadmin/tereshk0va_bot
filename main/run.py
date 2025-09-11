@@ -1,35 +1,31 @@
 import logging
 import asyncio
-from aiogram import Bot, Dispatcher  # F - класс чтобы пользоваться
 from main.handlers import router as router
-from datetime import datetime
-from main.config.settings import SCHEDULER_INTERVAL
-from dotenv import load_dotenv
 import os
+from main.utils.periodic_tasks import task_data_dump_s3
+from main.utils.middleware import CheckBotActivity
+from main.loader import bot, dp, scheduler, logger
 
-load_dotenv()
-bot = Bot(token=os.getenv('TOKEN'))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BOT_ACTIVITY_PATH = os.path.join(BASE_DIR, "config", "bot_activity.json")
+dp.update.outer_middleware(CheckBotActivity(BOT_ACTIVITY_PATH))
 
+print(f'распечатано из run.py, dp_bot_enabled = {dp.get("dp_bot_enabled", True)}')
 
-# async def my_periodic_task():  # функция, которая будет выполняться с некоторой периодичностью
-#         txt = "Прошло " + str(SCHEDULER_INTERVAL) + " сек."
-#         now = datetime.now()
-#         formatted = now.strftime("%d.%m.%Y %H:%M:%S,%f")[:-1]
-#         txt = txt + '\n' + formatted
-#         await bot.send_message(223852270, text=txt)
-#
-#
-# async def scheduler():  # планировщик
-#         while True:
-#             await my_periodic_task()
-#             await asyncio.sleep(SCHEDULER_INTERVAL)  # ждём 26 секунд
+logger.info("Бот стартует")
+
 
 
 async def main():
-    dp = Dispatcher()
+    # Полдключаем роутеры:
     dp.include_router(router)
-    # asyncio.create_task(scheduler())  # эта команда запускает планировщик
-    await dp.start_polling(bot)  # опрашиваем телеграм на наличие новых событий в бесконечном цикле
+
+    # Запускаем планировщик:
+    scheduler.add_job(task_data_dump_s3, "interval", seconds=3600, name='Сохранение данных в S3', id='data_dump_s3')
+    scheduler.start()
+
+    # Опрашиваем телеграм на наличие новых событий в бесконечном цикле:
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':

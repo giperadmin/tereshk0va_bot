@@ -9,12 +9,25 @@ import main.keyboards as kb
 import time
 from datetime import datetime
 from main.utils.answers import responses_to_bad_reviews as rtbr
-from main.utils.middleware import ThrottleMiddleware  # Ограничение частоты запросов от юзеров
+# from main.utils.middleware import ThrottleMiddleware  # Ограничение частоты запросов от юзеров
+# from main import ThrottleMiddleware
 from main import RATE_LIMIT, DB_PATH
+from main.utils.bot_activity_set import bot_activity_set
+from main.loader import dp
+from main import FilterIsAdmin
+from main.utils.s3_data_sync import all_local_to_s3
+from main.loader import scheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
+from main import loader,waiting
+
+
 
 router = Router(name='__name__')
-router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
-router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
+
+
+# router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
+# router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
 
 
 @router.message(CommandStart())
@@ -22,6 +35,22 @@ router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
 async def intro(message: Message, state: FSMContext):
     await state.clear()
     txt = 'Привет с орбиты! 🚀👽'
+    await message.answer(text=txt, reply_markup=kb.main)
+
+
+@router.message(F.text.lower() == 'выключить')
+async def intro(message: Message, state: FSMContext):
+    bot_activity_set(status=False)
+    dp["bot_enabled"] = False
+    txt = 'Бот выключен'
+    await message.answer(text=txt, reply_markup=kb.main)
+
+
+@router.message(F.text.lower() == 'включить')
+async def intro(message: Message, state: FSMContext):
+    bot_activity_set(status=True)
+    dp["bot_enabled"] = True
+    txt = 'Бот включен'
     await message.answer(text=txt, reply_markup=kb.main)
 
 
@@ -72,6 +101,50 @@ async def set_settings(message: Message):
     txt = ('Ну неужели мне за вас решать, чем заправить салат?!\n'
            'Мужчинам - не жалейте майонеза, девочкам - чуточку оливкового масла (оно, оказывается, дорогое по калориям)')
     await message.answer(text=txt, reply_markup=kb.main2)
+
+
+@router.message(F.text == "Настройки", FilterIsAdmin())
+async def set_settings(message: Message):
+    txt = 'Настройки для администратора'
+    await message.answer(text=txt, reply_markup=kb.kb_for_admin)
+
+
+@router.message(F.text == "Выключить ⭕", FilterIsAdmin())
+async def set_settings_off(message: Message):
+    txt = 'Бота работа остановлена.\nНо планировщик работает, фоновые задачи активны.'
+    await message.answer(text=txt, reply_markup=kb.kb_for_admin)
+    bot_activity_set(status=False)
+
+
+@router.message(F.text == 'Включить 🟢', FilterIsAdmin())
+async def set_settings_on(message: Message):
+    txt = 'Бота работа возобновлена будет'
+    bot_activity_set(status=True)
+    await message.answer(text=txt, reply_markup=kb.main)
+    if scheduler.running and scheduler.state == STATE_PAUSED:
+        scheduler.resume()
+
+
+@router.message(F.text == "Выключить и сделать дамп 🔴💾", FilterIsAdmin())
+async def set_settings_off_and_dump(message: Message):
+    txt = 'Бота работа остановлена будет. Дамп данных сделан будет.'
+    await message.answer(text=txt, reply_markup=kb.kb_for_admin)
+    bot_activity_set(status=False)
+    print(f'scheduler_task_running в хэндлерах: {loader.scheduler_task_running}')
+
+    # Если какая-то задача выполняется и переключила флаг - ждём:
+    waiting()
+
+    # Останавливаем планировщик:
+    scheduler.pause()
+
+    # Запускаем дамп в стандартное хранилище S3:
+    all_local_to_s3()
+
+    txt = 'Выполнено.\n⚠️ВНИМАНИЕ! Бот остаётся отключённым.'
+    await message.answer(text=txt, reply_markup=kb.kb_for_admin)
+    print(f'scheduler_task_running в хэндлерах в конце: {loader.scheduler_task_running}')
+
 
 
 @router.message(F.text == 'Настройки')
