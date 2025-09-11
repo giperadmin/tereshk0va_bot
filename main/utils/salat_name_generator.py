@@ -34,7 +34,7 @@ async def salat_name_generator(composition: str, state: FSMContext = None) -> di
         if field not in data:
             fn = DATA_SOURCE[field]
             words = await work_with_json.read_from_json(folderpath=DB_PATH, filename=fn)
-            print (words) # todo
+            # print (words) # todo
             random.shuffle(words)  # - перемешиваем список
             data[field] = words  # записываем список в FSM
 
@@ -46,12 +46,13 @@ async def salat_name_generator(composition: str, state: FSMContext = None) -> di
 
     # если закончились слова в каком-то списке в data, то подгружаем туда новый список
     for field in DATA_SOURCE.keys():
-        print('field:',field,' --> len(data[field]):',len(data[field]))
+        # print('field:',field,' --> len(data[field]):',len(data[field]))
         if not data[field]:
             fn = DATA_SOURCE[field]
             spisok = await work_with_json.read_from_json(folderpath=DB_PATH, filename=fn)
             random.shuffle(spisok)  # - перемешиваем список
             data[field] = spisok  # записываем список в data FSM
+            print(f'Обновлено поле {field}')
 
     words = await salat_name_constructor(words, composition)  # конструируем из слов фразу
     await state.update_data(data)  # обновляем state FSM перед выходом
