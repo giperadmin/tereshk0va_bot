@@ -7,7 +7,7 @@ from time import time
 from aiogram.types import Message, ReplyKeyboardRemove
 from main.loader import dp, admin_tg_id
 from main.utils.bot_activity_get import bot_activity_get
-from main import FilterIsAdmin as IsAdmin
+# from main import FilterIsAdmin as IsAdmin
 
 
 class ThrottleMiddleware(BaseMiddleware):

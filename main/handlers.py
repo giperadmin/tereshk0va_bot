@@ -9,25 +9,22 @@ import main.keyboards as kb
 import time
 from datetime import datetime
 from main.utils.answers import responses_to_bad_reviews as rtbr
-# from main.utils.middleware import ThrottleMiddleware  # Ограничение частоты запросов от юзеров
+from main.utils.middleware import ThrottleMiddleware  # Ограничение частоты запросов от юзеров
 # from main import ThrottleMiddleware
 from main import RATE_LIMIT, DB_PATH
 from main.utils.bot_activity_set import bot_activity_set
 from main.loader import dp
-from main import FilterIsAdmin
+from main.utils.filters import FilterIsAdmin
 from main.utils.s3_data_sync import all_local_to_s3
 from main.loader import scheduler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
-from main import loader,waiting
-
-
+from main import loader, waiting
 
 router = Router(name='__name__')
 
-
-# router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
-# router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
+router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
+router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
 
 
 @router.message(CommandStart())
@@ -144,7 +141,6 @@ async def set_settings_off_and_dump(message: Message):
     txt = 'Выполнено.\n⚠️ВНИМАНИЕ! Бот остаётся отключённым.'
     await message.answer(text=txt, reply_markup=kb.kb_for_admin)
     print(f'scheduler_task_running в хэндлерах в конце: {loader.scheduler_task_running}')
-
 
 
 @router.message(F.text == 'Настройки')

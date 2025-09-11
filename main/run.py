@@ -3,12 +3,14 @@ import asyncio
 from main.handlers import router as router
 import os
 from main.utils.periodic_tasks import task_data_dump_s3
-from main.utils.middleware import CheckBotActivity
+from main.utils.middleware import CheckBotActivity, ThrottleMiddleware
 from main.loader import bot, dp, scheduler, logger
+# from main.utils.filters import FilterIsAdmin
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BOT_ACTIVITY_PATH = os.path.join(BASE_DIR, "config", "bot_activity.json")
 dp.update.outer_middleware(CheckBotActivity(BOT_ACTIVITY_PATH))
+# dp.update.outer_middleware(ThrottleMiddleware(rate_limit=1))
 
 print(f'распечатано из run.py, dp_bot_enabled = {dp.get("dp_bot_enabled", True)}')
 

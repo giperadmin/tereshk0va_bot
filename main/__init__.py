@@ -11,7 +11,6 @@ from main.utils import (directory_tree,
 # from main.utils.middleware import CheckBotActivity
 from main.utils import bot_activity_get, bot_activity_set
 # from main.utils import ThrottleMiddleware
-from main.utils import FilterIsAdmin
 from main.utils import waiting
 from main.loader import logger
-
+from main.utils.middleware import ThrottleMiddleware
