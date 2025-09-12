@@ -4,29 +4,65 @@ from typing import Callable, Awaitable, Dict, Any
 import json
 from time import time
 # from main.loader import dp # todo
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
 from main.loader import dp, admin_tg_id
 from main.utils.bot_activity_get import bot_activity_get
+
+
 # from main import FilterIsAdmin as IsAdmin
 
 
 class ThrottleMiddleware(BaseMiddleware):
-    def __init__(self, rate_limit=0.5):  # В примере было <...>rate_limit=1
+    def __init__(self, rate_limit=1):  # В примере было <...>rate_limit=1
         self.rate_limit = rate_limit
         self.users_last_call = {}
 
     async def __call__(self, handler, event: TelegramObject, data):
-        user_id = getattr(event.from_user, 'id', None)
-        if user_id is None:
+        # user_id = getattr(event.from_user, 'id', None)
+        # if user_id is None:
+        #     return await handler(event, data)
+
+        from_user = None
+        message_or_callback = None
+
+        if event.message:
+            from_user = event.message.from_user
+            message_or_callback = event.message
+        elif event.callback_query:
+            from_user = event.callback_query.from_user
+            message_or_callback = event.callback_query
+        elif event.inline_query:
+            from_user = event.inline_query.from_user
+        elif event.chosen_inline_result:
+            from_user = event.chosen_inline_result.from_user
+        elif event.my_chat_member:
+            from_user = event.my_chat_member.from_user
+        elif event.chat_member:
+            from_user = event.chat_member.from_user
+        elif event.message_reaction:
+            from_user = event.message_reaction.user
+        # ⚠️ можно дописать сюда и другие типы апдейтов, при необходимости
+
+        # если нет юзера - пропускаем
+        if not from_user:
             return await handler(event, data)
+
+        user_id = from_user.id
+
+        # print(user_id)
 
         current_time = time()
         last_time = self.users_last_call.get(user_id, 0)
 
         if current_time - last_time < self.rate_limit:
             # Игнорируем событие или отправляем предупреждение
-            if hasattr(event, 'answer'):
-                await event.answer("Воу-воу! Не так быстро)", show_alert=False)
+            if message_or_callback:
+                try:
+                    if hasattr(message_or_callback, "answer"):
+                        await message_or_callback.answer("Воу-воу! Не так быстро) 🚦")
+                except Exception as e:
+                    # print(f"Не смогли отправить предупреждение: {e}")
+                    pass
             return
 
         self.users_last_call[user_id] = current_time
@@ -57,12 +93,12 @@ class CheckBotActivity(BaseMiddleware):
         user = event.message.from_user
         user_id = user.id
 
-        if user_id==admin_tg_id:
+        if user_id == admin_tg_id:
             # print ('IsAdmin = ',str(IsAdmin))
             return await handler(event, data)
 
         if not bot_status.get("bot_enabled", True):
-        # if not bot_enabled:
+            # if not bot_enabled:
             await event.message.answer("Бот сейчас выключен ❌")
             return  # если бот "выключен" — игнорим апдейт
 

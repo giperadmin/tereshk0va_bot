@@ -19,12 +19,13 @@ from main.utils.s3_data_sync import all_local_to_s3
 from main.loader import scheduler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
-from main import loader, waiting
+from main import loader, waiting, task_data_dump_s3
 
 router = Router(name='__name__')
 
-router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
-router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
+
+# router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
+# router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
 
 
 @router.message(CommandStart())
@@ -136,7 +137,7 @@ async def set_settings_off_and_dump(message: Message):
     scheduler.pause()
 
     # Запускаем дамп в стандартное хранилище S3:
-    all_local_to_s3()
+    task_data_dump_s3()
 
     txt = 'Выполнено.\n⚠️ВНИМАНИЕ! Бот остаётся отключённым.'
     await message.answer(text=txt, reply_markup=kb.kb_for_admin)

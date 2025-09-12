@@ -23,6 +23,33 @@ def waiting(tittle: str = '', period: int = 1):
         print(f'{tittle} ждём-с...')
 
 
+def task_data_sync_s3():
+    # Если какая-то задача с помощью переменной флага отметила свой запуск, то ждём её завершения:
+    waiting()
+
+    # С помощью переменной-флага отмечаем, что началось выполнение задачи:
+    loader.scheduler_task_running = True
+
+    # print(f'началось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
+    time.sleep(5)  # todo убрать эту задержку
+
+    # Готовим пути:
+    s3_pref = PROJECT_NAME + '/' + BOT_NAME + '/' + DB_PATH
+    s3_pref.replace('\\', '/')
+
+    print(f'Запускаем sync_local_to_s3 с s3_pref = {s3_pref}')
+
+    # Запускаем синхронизацию:
+    s3_data_sync.sync_local_to_s3(
+        local_dir=DB_PATH,
+        s3_prefix=s3_pref,
+
+    )
+
+    # Отключаем переменную-флаг:
+    loader.scheduler_task_running = False
+    # print(f'завершилось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
+
 def task_data_dump_s3():
     # Если какая-то задача с помощью переменной флага отметила свой запуск, то ждём её завершения:
     waiting()
@@ -37,10 +64,10 @@ def task_data_dump_s3():
     s3_pref = PROJECT_NAME + '/' + BOT_NAME + '/' + DB_PATH
     s3_pref.replace('\\', '/')
 
+    print(f'\nЗапускаем all_local_to_s3 с DB_PATH = {DB_PATH}, s3_pref = {s3_pref}\n')
+
     # Запускаем синхронизацию:
-    s3_data_sync.sync_local_to_s3(
-        local_dir=DB_PATH,
-        s3_prefix=s3_pref)
+    s3_data_sync.all_local_to_s3(local_dir=DB_PATH,s3_prefix=s3_pref)
 
     # Отключаем переменную-флаг:
     loader.scheduler_task_running = False

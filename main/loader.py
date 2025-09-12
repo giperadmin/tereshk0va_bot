@@ -27,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 """
 Теперь:
-В любом месте проекта можешь писать:
+В любом месте проекта можно писать:
 from main.loader import logger
 
 logger.info("Бот стартует")

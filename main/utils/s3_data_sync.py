@@ -18,8 +18,6 @@ S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 S3_BUCKET = os.getenv("S3_BUCKET")
 REGION_NAME = "ru-1"
 
-
-
 PATH_TO_ROOT = "../../" + DB_PATH  # todo это надо обдумать. Сделать универсальнее
 
 # Создаём s3 клиент:
@@ -75,6 +73,7 @@ def sync_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
     :param s3_prefix: — это виртуальная "папка" или путь внутри S3-бакета. s3_prefix — это мощный инструмент для организации данных в S3, который работает как виртуальная файловая система, давая все преимущества структурированного хранения без реальных папок.
     :param local_dir: путь к каталогу (ld = '../' + DB_PATH)
     """
+    s3_prefix.replace('\\', '/')
     paginator = s3.get_paginator("list_objects_v2")
     for page in paginator.paginate(Bucket=S3_BUCKET, Prefix=s3_prefix):
         for obj in page.get("Contents", []):
@@ -102,7 +101,7 @@ def sync_local_to_s3(local_dir: str = DB_PATH, s3_prefix: str = ""):
     """
     Загружает файлы из локального каталога в S3, если они отличаются (или если в бакете их нет).
     :param local_dir: путь к каталогу (ld = '../' + DB_PATH)
-    :param s3_prefix: — это виртуальная "папка" или путь внутри S3-бакета. s3_prefix — это мощный инструмент для организации данных в S3, который работает как виртуальная файловая система, давая все преимущества структурированного хранения без реальных папок.
+    :param s3_prefix: это виртуальная "папка" или путь внутри S3-бакета. s3_prefix — это мощный инструмент для организации данных в S3, который работает как виртуальная файловая система, давая все преимущества структурированного хранения без реальных папок.
     :return:
     """
     for root, dirs, files in os.walk(local_dir):
@@ -138,13 +137,13 @@ def all_local_to_s3(local_dir: str = DB_PATH, s3_prefix: str = ""):
     :param s3_prefix: префикс, который мы добавляем к ключу при загрузке целого каталога. Он нужен, чтобы загружать папку в S3 не в корень, а в определённый «виртуальный подкаталог». s3_prefix — это виртуальная "папка" или путь внутри S3-бакета.
     :return:
     """
-
+    s3_prefix.replace('\\', '/')
     for root, dirs, files in os.walk(local_dir):
         for file in files:
-            local_path = os.path.join(root, file)
+            local_path = os.path.join(root, file).replace('\\', '/')
 
             # относительный путь внутри каталога
-            relative_path = os.path.relpath(local_path, local_dir)
+            relative_path = os.path.relpath(local_path, local_dir).replace('\\', '/')
             s3_path = os.path.join(s3_prefix, relative_path).replace("\\", "/")
 
             try:
@@ -167,6 +166,7 @@ def all_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
 
     try:
         # Проходим по страницам объектов в бакете
+
         for page in paginator.paginate(Bucket=S3_BUCKET, Prefix=s3_prefix):
             if "Contents" in page:
                 for obj in page["Contents"]:
@@ -185,7 +185,7 @@ def all_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
                     print(f"Скачиваю s3://{S3_BUCKET}/{s3_key} → {local_path}")
                     s3.download_file(S3_BUCKET, s3_key, local_path)
     except NoCredentialsError:
-        print("❌ Не найдены AWS credentials. Настройте их с помощью `aws configure`.")
+        print("❌ Не найдены AWS credentials.")
 
 
 # 2. Операции с файлами:
@@ -311,8 +311,6 @@ def file_from_s3_to_local(s3_key: str, local_path: str = None):
         print('что-то пошло не так')
 
 
-
-
 if __name__ == "__main__":
     # sync_s3_to_local()
     # sync_local_to_s3()
@@ -320,5 +318,5 @@ if __name__ == "__main__":
     # all_s3_to_local()
     s3_key = ('752044words_salaс'
               'ts_old.json')
-    lp='../ИИИИИИ'
-    file_from_s3_to_local(s3_key,local_path=lp)
+    lp = '../ИИИИИИ'
+    file_from_s3_to_local(s3_key, local_path=lp)
