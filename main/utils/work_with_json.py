@@ -65,7 +65,8 @@ async def read_from_json(folderpath: str, filename: str) -> dict | list:
                 with open(f'{folderpath}{filename}', 'r', encoding='utf-8') as file:
                     data = json.load(file)
                 if type(data) != dict:
-                    print('')
+                    pass
+                    # print('')
                 # print(str(data))
                 return data
             except FileNotFoundError:

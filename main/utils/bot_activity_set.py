@@ -31,7 +31,7 @@ def bot_activity_set(path: str = BOT_ACTIVITY_PATH, status: bool = True):
 
     with open(f'{path}', 'r', encoding='utf-8') as file:
         bot_status = json.load(file)
-    # print(f'А теперь хранится словарь: {bot_status}')
+    print(f'bot_status: {bot_status}')
 
     # Получаем значение глобальной переменной:
     # bot_enabled = dp.get("bot_enabled", True)

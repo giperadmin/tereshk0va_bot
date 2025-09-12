@@ -31,7 +31,7 @@ s3 = boto3.client(
 )
 
 
-# Получение списка файлов по заданному пути:
+# A. Получение списка файлов по заданному пути:
 def list_local(path_to_dir: str):
     """
     Возвращает список каталогов и файлов по указанному локальному пути
@@ -56,11 +56,45 @@ def list_local(path_to_dir: str):
     return dirs, files
 
 
+# B. Нормализация путей (из длинных ключей S3 делает нормальные пути)
+def normalize_path(path: str | Path) -> Path:
+    """
+    Преобразует путь так, чтобы он начинался с 'main/data/...'
+    """
+    path = Path(path)
+    parts = path.parts
+
+    # ищем первую последовательность "main/data"
+    for i in range(len(parts) - 1):
+        if parts[i] == "main" and parts[i + 1] == "data":
+            return Path(*parts[i:])
+
+    # если не нашли — возвращаем только имя файла в main/data
+    return Path("main/data") / path.name
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 1. Операции с каталогами:
 
 def calculate_md5(file_path):
     """    Вычисляем MD5-хеш файла    """
     hash_md5 = hashlib.md5()
+    # print(f'file_path in calculate_md5: {file_path}')
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)  # type: ignore[arg-type]
@@ -73,14 +107,18 @@ def sync_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
     :param s3_prefix: — это виртуальная "папка" или путь внутри S3-бакета. s3_prefix — это мощный инструмент для организации данных в S3, который работает как виртуальная файловая система, давая все преимущества структурированного хранения без реальных папок.
     :param local_dir: путь к каталогу (ld = '../' + DB_PATH)
     """
+    # Берём только имя последней папки из полного пути DB_PATH, т.е. data/
+    # local_dir = Path(DB_PATH).name
+
     s3_prefix.replace('\\', '/')
     paginator = s3.get_paginator("list_objects_v2")
     for page in paginator.paginate(Bucket=S3_BUCKET, Prefix=s3_prefix):
         for obj in page.get("Contents", []):
             key = obj["Key"]
-            local_path = os.path.join(local_dir, key)
-            os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
+            local_path = normalize_path(key)
+
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
             action = "☁️➡️ ✅ Загружен новый"
             if os.path.exists(local_path):
                 local_size = os.path.getsize(local_path)
@@ -89,12 +127,14 @@ def sync_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
                 if local_size == obj["Size"] and local_md5 == s3_etag:
                     action = "☁️➡️ ⏩ Пропущен"
                 else:
-                    action = "☁️➡️ 🔄 Обновлён"
+                    action = "☁️➡️ ✨ Обновлён"
+
 
             if action != "☁️➡️ ⏩ Пропущен":
+                # local_path = normalize_path(local_path)
                 s3.download_file(S3_BUCKET, key, local_path)
 
-            print(f"{action}: {local_path}")
+            print(f"{action} {key}: {local_path}")
 
 
 def sync_local_to_s3(local_dir: str = DB_PATH, s3_prefix: str = ""):
@@ -119,7 +159,7 @@ def sync_local_to_s3(local_dir: str = DB_PATH, s3_prefix: str = ""):
                     # action = "-→☁️  Пропущен"
                     action = None
                 else:
-                    action = "-→☁️ ✨ Обновлён"
+                    action = "-→☁️ ✨ Обновлён в S3"
             except ClientError as e:
                 if e.response["Error"]["Code"] != "404":
                     raise
@@ -160,23 +200,34 @@ def all_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
     :param s3_prefix: префикс (папка) внутри S3, "" если корень
     :param local_dir: локальная папка для сохранения файлов
     """
+    print(f'\n(all_s3_to_local) s3_prefix = {s3_prefix}\n')
+
+    # s3_prefix =''
 
     # Пагинатор нужен для обработки большого количества файлов
     paginator = s3.get_paginator("list_objects_v2")
 
     try:
         # Проходим по страницам объектов в бакете
-
         for page in paginator.paginate(Bucket=S3_BUCKET, Prefix=s3_prefix):
             if "Contents" in page:
                 for obj in page["Contents"]:
-                    s3_key = obj["Key"]  # полный путь объекта в S3
+
+                    # print(str(obj))
+
+                    s3_key = obj["Key"]  # полный путь объекта в S3 # Noinspection
+                    print(f's3_key = {str(s3_key)}')
 
                     # Вычисляем относительный путь относительно префикса S3
                     relative_path = os.path.relpath(s3_key, s3_prefix)
+                    print(f'relative_path = {relative_path}')
 
                     # Создаем локальный путь для сохранения файла
-                    local_path = os.path.join(local_dir, relative_path)
+                    local_path = os.path.join(local_dir,
+                                              relative_path
+                                              )
+                    print(f'local_path = {local_path}')
+
 
                     # Создаем папки, если их ещё нет
                     os.makedirs(os.path.dirname(local_path), exist_ok=True)
@@ -184,6 +235,7 @@ def all_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
                     # Загружаем файл из S3
                     print(f"Скачиваю s3://{S3_BUCKET}/{s3_key} → {local_path}")
                     s3.download_file(S3_BUCKET, s3_key, local_path)
+                    print()
     except NoCredentialsError:
         print("❌ Не найдены AWS credentials.")
 

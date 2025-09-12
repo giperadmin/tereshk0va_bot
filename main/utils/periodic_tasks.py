@@ -72,3 +72,27 @@ def task_data_dump_s3():
     # Отключаем переменную-флаг:
     loader.scheduler_task_running = False
     # print(f'завершилось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
+
+def task_sync_from_S3_to_local():
+    # Если какая-то задача с помощью переменной флага отметила свой запуск, то ждём её завершения:
+    waiting()
+
+    # С помощью переменной-флага отмечаем, что началось выполнение задачи:
+    loader.scheduler_task_running = True
+
+    # print(f'началось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
+    time.sleep(5)  # todo убрать эту задержку
+
+    # Готовим пути:
+    s3_pref = PROJECT_NAME + '/' + BOT_NAME + '/' + DB_PATH
+    s3_pref.replace('\\', '/')
+
+    print(f'\nЗапускаем all_local_to_s3 с DB_PATH = {DB_PATH}, s3_pref = {s3_pref}\n')
+
+    # Запускаем синхронизацию:
+    s3_data_sync.sync_s3_to_local(s3_prefix=s3_pref,local_dir=DB_PATH)
+
+    # Отключаем переменную-флаг:
+    loader.scheduler_task_running = False
+    # print(f'завершилось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
+

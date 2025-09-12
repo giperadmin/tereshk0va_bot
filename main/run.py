@@ -4,8 +4,13 @@ from main.handlers import router as router
 import os
 from main.utils.periodic_tasks import task_data_sync_s3
 from main.utils.middleware import CheckBotActivity, ThrottleMiddleware
-from main.loader import bot, dp, scheduler, logger
+from main.loader import bot, dp, scheduler
 from main import bot_activity_set
+from main.utils import s3_data_sync
+from pathlib import Path
+from main.config import PROJECT_NAME
+from main.loader import BOT_NAME
+
 
 # from main.utils.filters import FilterIsAdmin
 
@@ -18,18 +23,30 @@ BOT_ACTIVITY_PATH = os.path.join(BASE_DIR, "config", "bot_activity.json")
 dp.update.outer_middleware(CheckBotActivity(BOT_ACTIVITY_PATH))
 dp.update.outer_middleware(ThrottleMiddleware(rate_limit=1))
 
-print(f'распечатано из run.py, dp_bot_enabled = {dp.get("dp_bot_enabled", True)}')
 
-logger.info("Бот стартует")
+# logger.info("Бот стартует")
 
 
 async def main():
     # Полдключаем роутеры:
     dp.include_router(router)
 
+    # Подтягиваем накопленные данные из хранилища S3
+    # s3_data_sync.sync_s3_to_local()
+
+    # Подтягиваем логи
+    s3_pref = str(Path(PROJECT_NAME, BOT_NAME)).replace("\\", "/")
+    # s3_pref='main/data/logs/'
+    s3_data_sync.all_s3_to_local(local_dir='',
+                                 s3_prefix=s3_pref
+                                 )
+
+
     # Запускаем планировщик:
-    scheduler.add_job(task_data_sync_s3, "interval", seconds=3600, name='Сохранение данных в S3', id='data_dump_s3')
+    scheduler.add_job(task_data_sync_s3, "interval", seconds=20, name='Сохранение данных в S3', id='data_dump_s3')
     scheduler.start()
+
+
 
     # Опрашиваем телеграм на наличие новых событий в бесконечном цикле:
     await dp.start_polling(bot)
