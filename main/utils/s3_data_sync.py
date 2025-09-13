@@ -10,6 +10,9 @@ import json
 from pathlib import Path  # более современная, чем os
 import mimetypes
 
+from main.loader import BOT_NAME
+from main.config.settings import PROJECT_NAME
+
 # Получаем настройки:
 load_dotenv()
 S3_ENDPOINT = os.getenv("S3_ENDPOINT")
@@ -19,6 +22,8 @@ S3_BUCKET = os.getenv("S3_BUCKET")
 REGION_NAME = "ru-1"
 
 PATH_TO_ROOT = "../../" + DB_PATH  # todo это надо обдумать. Сделать универсальнее
+
+s3_pref_default = str(Path(PROJECT_NAME, BOT_NAME)).replace("\\", "/")
 
 # Создаём s3 клиент:
 s3 = boto3.client(
@@ -73,28 +78,11 @@ def normalize_path(path: str | Path) -> Path:
     return Path("main/data") / path.name
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # 1. Операции с каталогами:
 
 def calculate_md5(file_path):
     """    Вычисляем MD5-хеш файла    """
     hash_md5 = hashlib.md5()
-    # print(f'file_path in calculate_md5: {file_path}')
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)  # type: ignore[arg-type]
@@ -128,7 +116,6 @@ def sync_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
                     action = "☁️➡️ ⏩ Пропущен"
                 else:
                     action = "☁️➡️ ✨ Обновлён"
-
 
             if action != "☁️➡️ ⏩ Пропущен":
                 # local_path = normalize_path(local_path)
@@ -187,13 +174,13 @@ def all_local_to_s3(local_dir: str = DB_PATH, s3_prefix: str = ""):
             s3_path = os.path.join(s3_prefix, relative_path).replace("\\", "/")
 
             try:
-                print(f"Загружаю {local_path} → s3://{S3_BUCKET}/{s3_path}")
+                # print(f"Загружаю {local_path} → s3://{S3_BUCKET}/{s3_path}")
                 s3.upload_file(local_path, S3_BUCKET, s3_path)
             except NoCredentialsError:
                 print("❌ Не найдены AWS credentials. Настройте их с помощью `aws configure`.")
 
 
-def all_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
+def all_s3_to_local(s3_prefix: str = s3_pref_default, local_dir: str = DB_PATH):
     """
     Скачивает все файлы из указанного s3_prefix в бакете хранилища S3 в локальный каталог,
     сохраняя структуру папок.
@@ -209,33 +196,33 @@ def all_s3_to_local(s3_prefix: str = "", local_dir: str = DB_PATH):
 
     try:
         # Проходим по страницам объектов в бакете
+        # print('Проходим по страницам объектов в бакете')
         for page in paginator.paginate(Bucket=S3_BUCKET, Prefix=s3_prefix):
+            # print(f"page = {page}")
             if "Contents" in page:
                 for obj in page["Contents"]:
-
                     # print(str(obj))
 
                     s3_key = obj["Key"]  # полный путь объекта в S3 # Noinspection
-                    print(f's3_key = {str(s3_key)}')
+                    # print(f's3_key = {str(s3_key)}')
 
                     # Вычисляем относительный путь относительно префикса S3
                     relative_path = os.path.relpath(s3_key, s3_prefix)
-                    print(f'relative_path = {relative_path}')
+                    # print(f'relative_path = {relative_path}')
 
                     # Создаем локальный путь для сохранения файла
                     local_path = os.path.join(local_dir,
                                               relative_path
                                               )
-                    print(f'local_path = {local_path}')
-
+                    # print(f'local_path = {local_path}')
 
                     # Создаем папки, если их ещё нет
                     os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
                     # Загружаем файл из S3
-                    print(f"Скачиваю s3://{S3_BUCKET}/{s3_key} → {local_path}")
+                    # print(f"Скачиваю s3://{S3_BUCKET}/{s3_key} → {local_path}")
                     s3.download_file(S3_BUCKET, s3_key, local_path)
-                    print()
+
     except NoCredentialsError:
         print("❌ Не найдены AWS credentials.")
 
@@ -345,12 +332,11 @@ def file_to_s3(local_file_path: str, s3_key: str = None,
         print(f"❌ Ошибка при загрузке файла: {e}")
 
 
-def file_from_s3_to_local(s3_key: str, local_path: str = None):
+def file_from_s3_to_local(s3_key: str = "", local_path: str = None):
     """
     Скачивает файл из S3 в локальное хранилище.
-    :param bucket: имя S3-бакета
     :param s3_key: ключ (путь) в бакете
-    :param local_file_path: путь, куда сохранить файл локально
+    :param local_path: путь, куда сохранить файл локально
                             (если None — сохраняется с тем же именем, что и в S3)
     """
     try:
@@ -368,7 +354,7 @@ if __name__ == "__main__":
     # sync_local_to_s3()
     # all_local_to_s3()
     # all_s3_to_local()
-    s3_key = ('752044words_salaс'
-              'ts_old.json')
+    s3_k: str
+    s3_k = '752044words_salats_old.json'
     lp = '../ИИИИИИ'
-    file_from_s3_to_local(s3_key, local_path=lp)
+    file_from_s3_to_local(s3_key=s3_k, local_path=lp)

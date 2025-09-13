@@ -1,6 +1,7 @@
 from aiogram import Bot, F, Router  # F - класс чтобы пользоваться фильтром
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.filters import or_f
 from main.utils.salat_generator import salat_generator
 import main.utils.salat_name_generator as sng
 from main.utils.work_with_json import save_as_json, read_from_json
@@ -28,8 +29,9 @@ router = Router(name='__name__')
 # router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
 
 
-@router.message(CommandStart())
-@router.message(F.text == 'Обнулить')
+# @router.message(CommandStart())
+# @router.message(F.text == 'Обнулить')
+@router.message(or_f(CommandStart(), F.text == "Обнулить"))
 async def intro(message: Message, state: FSMContext):
     await state.clear()
     txt = 'Привет с орбиты! 🚀👽'
@@ -142,6 +144,15 @@ async def set_settings_off_and_dump(message: Message):
     txt = 'Выполнено.\n⚠️ВНИМАНИЕ! Бот остаётся отключённым.'
     await message.answer(text=txt, reply_markup=kb.kb_for_admin)
     print(f'scheduler_task_running в хэндлерах в конце: {loader.scheduler_task_running}')
+
+
+
+
+
+
+
+
+
 
 
 @router.message(F.text == 'Настройки')

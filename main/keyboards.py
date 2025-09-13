@@ -40,7 +40,8 @@ main4 = ReplyKeyboardMarkup(keyboard=[
 
 kb_for_admin = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Выключить ⭕'), KeyboardButton(text='Включить 🟢')],
-    [KeyboardButton(text="Выключить и сделать дамп 🔴💾")]
+    [KeyboardButton(text="Выключить и сделать дамп 🔴💾")],
+    [KeyboardButton(text="TEST")]
 ],
     resize_keyboard=True,
     input_field_placeholder='Жмите кнопки',
