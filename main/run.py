@@ -42,7 +42,7 @@ async def main():
 
 
     # Запускаем планировщик:
-    scheduler.add_job(task_data_sync_s3, "interval", seconds=20, name='Сохранение данных в S3', id='data_dump_s3')
+    scheduler.add_job(task_data_sync_s3, "interval", seconds=60*5, name='Сохранение данных в S3', id='data_dump_s3')
     scheduler.start()
 
     # Опрашиваем телеграм на наличие новых событий в бесконечном цикле:
