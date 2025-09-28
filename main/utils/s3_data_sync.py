@@ -10,10 +10,13 @@ import json
 from pathlib import Path  # более современная, чем os
 import mimetypes
 
-from main.loader import BOT_NAME
+# from main.loader import BOT_NAME
 from main.config.settings import PROJECT_NAME
 
 # Получаем настройки:
+
+
+
 load_dotenv()
 S3_ENDPOINT = os.getenv("S3_ENDPOINT")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
@@ -21,9 +24,12 @@ S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 S3_BUCKET = os.getenv("S3_BUCKET")
 REGION_NAME = "ru-1"
 
-PATH_TO_ROOT = "../../" + DB_PATH  # todo это надо обдумать. Сделать универсальнее
+BOT_NAME=os.getenv('BOT_NAME')
 
 s3_pref_default = str(Path(PROJECT_NAME, BOT_NAME)).replace("\\", "/")
+
+
+
 
 # Создаём s3 клиент:
 s3 = boto3.client(

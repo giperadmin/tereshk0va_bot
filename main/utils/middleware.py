@@ -3,9 +3,12 @@ from aiogram.types import TelegramObject, Message
 from typing import Callable, Awaitable, Dict, Any
 import json
 from time import time
+from main import ADMIN_TG_ID
 # from main.loader import dp # todo
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
-from main.loader import dp, admin_tg_id
+
+# from main.loader import dp
+
 from main.utils.bot_activity_get import bot_activity_get
 
 
@@ -21,7 +24,7 @@ class ThrottleMiddleware(BaseMiddleware):
         # user_id = getattr(event.from_user, 'id', None)
         # if user_id is None:
         #     return await handler(event, data)
-
+        print(f"Сработал ThrottleMiddleware")
         from_user = None
         message_or_callback = None
 
@@ -70,6 +73,7 @@ class ThrottleMiddleware(BaseMiddleware):
 
 
 class CheckBotActivity(BaseMiddleware):
+    """Проверяем, что бот активен"""
     def __init__(self, filepath: str):
         self.filepath = filepath
 
@@ -88,12 +92,12 @@ class CheckBotActivity(BaseMiddleware):
             bot_status = json.load(f)
         # print(bot_status)
 
-        bot_enabled = dp.get("dp_bot_enabled", True)
+        # bot_enabled = dp.get("dp_bot_enabled", True)
 
         user = event.message.from_user
         user_id = user.id
 
-        if user_id == admin_tg_id:
+        if user_id == ADMIN_TG_ID:
             # print ('IsAdmin = ',str(IsAdmin))
             return await handler(event, data)
 
