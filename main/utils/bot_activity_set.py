@@ -3,6 +3,8 @@ import os
 import time
 # from main.loader import dp
 import random
+# from main.loader import dp
+
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.dirname(CURRENT_DIR)
@@ -32,6 +34,9 @@ def bot_activity_set(path: str = BOT_ACTIVITY_PATH, status: bool = True):
     with open(f'{path}', 'r', encoding='utf-8') as file:
         bot_status = json.load(file)
     print(f'bot_status: {bot_status}')
+    
+    # dp["dp_bot_enabled"] = status
+    # print(f"dp[\"dp_bot_enabled\"] =  {dp["dp_bot_enabled"]}")
 
     # Получаем значение глобальной переменной:
     # bot_enabled = dp.get("bot_enabled", True)

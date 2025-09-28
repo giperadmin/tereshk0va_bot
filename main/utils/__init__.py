@@ -12,3 +12,5 @@ from .periodic_tasks import waiting
 from  .middleware import ThrottleMiddleware,CheckBotActivity
 from .periodic_tasks import task_data_sync_s3, task_data_dump_s3
 from .bot_activity_set import bot_activity_set
+from .periodic_tasks import task_data_sync_s3
+from .history_utils import add_to_history

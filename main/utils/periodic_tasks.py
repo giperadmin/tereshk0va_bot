@@ -2,10 +2,12 @@ import time
 from pickle import GLOBAL
 
 from main.utils import s3_data_sync, directory_tree
+from main.utils import s3_cold_data_sync
 import os
 from dotenv import load_dotenv
 from main import DB_PATH, SCHEDULER_INTERVAL, PROJECT_NAME
 from main import loader
+from main.utils.history_utils import add_to_history as h
 
 BOT_NAME = os.getenv("BOT_NAME")
 
@@ -49,6 +51,7 @@ def task_data_sync_s3():
     # Отключаем переменную-флаг:
     loader.scheduler_task_running = False
     # print(f'завершилось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
+    h('task_data_sync_s3 отработал')
 
 def task_data_dump_s3():
     # Если какая-то задача с помощью переменной флага отметила свой запуск, то ждём её завершения:
@@ -72,6 +75,7 @@ def task_data_dump_s3():
     # Отключаем переменную-флаг:
     loader.scheduler_task_running = False
     # print(f'завершилось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
+    h('task_data_dump_s3 отработал DUMP')
 
 def task_sync_from_S3_to_local():
     # Если какая-то задача с помощью переменной флага отметила свой запуск, то ждём её завершения:
@@ -95,4 +99,11 @@ def task_sync_from_S3_to_local():
     # Отключаем переменную-флаг:
     loader.scheduler_task_running = False
     # print(f'завершилось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
+    h('task_sync_from_S3_to_local отработал')
 
+def task_copy_all_s3_to_cold_s3():
+    waiting()
+    loader.scheduler_task_running = True
+    s3_cold_data_sync.copy_all_s3_to_cold_s3()
+    loader.scheduler_task_running = False
+    h('task_copy_all_s3_to_cold_s3 отработал DUMP в COLD')

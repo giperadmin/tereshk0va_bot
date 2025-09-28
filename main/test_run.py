@@ -1,4 +1,4 @@
-from main.utils.periodic_tasks import task_sync_from_S3_to_local
-from main.utils import s3_data_sync
+from main.utils.s3_cold_data_sync import copy_all_s3_to_cold_s3
 
-s3_data_sync.all_s3_to_local()
+key_test=''
+copy_all_s3_to_cold_s3()

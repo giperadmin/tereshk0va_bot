@@ -3,7 +3,8 @@ from main.config import (
     S3_DB_PATH,
     DB_PATH,
     SCHEDULER_INTERVAL,
-    PROJECT_NAME
+    PROJECT_NAME,
+    ADMIN_TG_ID
 )
 from main.utils import (directory_tree,
                         s3_data_sync)
@@ -15,3 +16,5 @@ from main.utils import waiting
 # from main.loader import logger
 from main.utils.middleware import ThrottleMiddleware
 from main.utils import task_data_sync_s3, task_data_dump_s3, bot_activity_set
+
+from main.utils import add_to_history

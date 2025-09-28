@@ -12,8 +12,7 @@
 
 import json, asyncio
 from json import JSONDecodeError
-
-from filelock import FileLock, Timeout
+from filelock import FileLock
 
 
 async def save_as_json(data, filename: str = 'noname.json',
@@ -49,10 +48,12 @@ async def save_as_json(data, filename: str = 'noname.json',
                 return 'Создан новый файл'
             except JSONDecodeError:
                 return 'Ошибка декодирования'
-            except:
-                return 'Неизвестная ошибка 1'
-    except:
-        return 'Неизвестная ошибка 2'
+            except Exception as e:
+                report = f"Ошибка 1 в save_as_json: {e}"
+                return report
+    except Exception as e:
+        report = f"Ошибка 2 в save_as_json: {e}"
+        return report
 
 
 async def read_from_json(folderpath: str, filename: str) -> dict | list:
@@ -76,25 +77,22 @@ async def read_from_json(folderpath: str, filename: str) -> dict | list:
                 print('JSONDecodeError в read_from_json')
                 return {'ошибка': 'JSONDecodeError в read_from_json'}
             except Exception as e:
-                print(f"Произошла ошибка: {e}")
-                return {'ошибка': f"Произошла ошибка: {e}"}
-            except:
-                print('исключение в read_from_json')
-                return {'ошибка': 'исключение в read_from_json'}
-    except:
-        print('')
-        return {'ошибка': 'ПРЯМ СРАЗУ В read_from_json'}
+                report = f'исключение в read_from_json {e}'
+                return {'ERROR': report}
+    except Exception as e:
+        report = f"ошибка: ПРЯМ СРАЗУ В read_from_json {e}"
+        return {"ERROR": report}
     pass
 
 
-if __name__ == "__main__": # для тестирования
-    test_dict={'key2':135}
-    fp='../../main/data/'
+if __name__ == "__main__":  # для тестирования
+    test_dict = {'key2': 135}
+    fp = '../../main/data/'
     fn = 'test2_name'
     if not fn.endswith(".json"): fn += ".json"
     print(
         asyncio.run(save_as_json(data=test_dict,
                                  folderpath=fp,
-                                 filename=fn )
+                                 filename=fn)
                     )
     )

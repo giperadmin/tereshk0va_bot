@@ -3,6 +3,6 @@ from main.config.settings import (
     DB_PATH,
     S3_DB_PATH,
     SCHEDULER_INTERVAL,
-    PROJECT_NAME
+    PROJECT_NAME,
+    ADMIN_TG_ID
 )
-
