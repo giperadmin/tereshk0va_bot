@@ -21,7 +21,7 @@ from main.utils.history_utils import add_to_history as h
 # from main.routers.test_router import router as test_router
 # from main.routers.last_router import router as last_router
 
-h('........запущен loader........')
+h('\n...................................................запущен loader........')
 
 load_dotenv()
 BOT_NAME = os.getenv('BOT_NAME')

@@ -23,8 +23,9 @@ from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
 from main import loader, waiting, task_data_dump_s3, task_copy_all_s3_to_cold_s3
 from main.routers import last_router
 
-
 router = Router(name='__name__')
+
+
 # router.message.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
 # router.callback_query.middleware(ThrottleMiddleware(rate_limit=RATE_LIMIT))
 
@@ -42,7 +43,8 @@ async def intro(message: Message, state: FSMContext):
 async def intro(message: Message, state: FSMContext):
     bot_activity_set(status=False)
     dp["bot_enabled"] = False
-    print(f"dp[\"bot_enabled\"] = {dp["bot_enabled"]}")
+    dp_bot_enabled: bool = dp["bot_enabled"] # просто чтобы вывести на печать
+    print(f"dp[\"bot_enabled\"] = {dp_bot_enabled}")
     txt = 'Бот выключен'
     await message.answer(text=txt, reply_markup=kb.main)
 
@@ -51,12 +53,14 @@ async def intro(message: Message, state: FSMContext):
 async def intro(message: Message, state: FSMContext):
     bot_activity_set(status=True)
     dp["bot_enabled"] = True
-    print(f"dp[\"bot_enabled\"] = {dp["bot_enabled"]}")
+    dp_bot_enabled: bool = dp["bot_enabled"] # просто чтобы вывести на печать
+    print(f"dp[\"bot_enabled\"] = {dp_bot_enabled}")
     txt = 'Бот включен'
     await message.answer(text=txt, reply_markup=kb.main)
 
 
-@router.message(F.text == 'Придумай салат!',FilterIsEnable())  # F-фильтром можно ловить всё, что пришлют, текст, медиа...
+@router.message(F.text == 'Придумай салат!',
+                FilterIsEnable())  # F-фильтром можно ловить всё, что пришлют, текст, медиа...
 async def test1(message: Message, bot: Bot, state: FSMContext):
     intro = 'Вот, какой изумительный рецепт я подобрала:\n👩🥘\n'
     composition = await salat_generator(with_titles=False)
@@ -66,7 +70,7 @@ async def test1(message: Message, bot: Bot, state: FSMContext):
     txt = (intro + p + salat_name.get("about") + ':' + p + p
            + composition + p + salat_name["emodzi"] + p + starline + p)
     await message.answer(text=txt, reply_markup=kb.main3)
-
+    
     data_key = str(time.time())
     data_item = (str(message.from_user.id) +
                  '; first_name: ' + str(message.from_user.first_name) +
@@ -117,7 +121,8 @@ async def set_settings_off(message: Message):
     await message.answer(text=txt, reply_markup=kb.kb_for_admin)
     bot_activity_set(status=False)
     dp["bot_enabled"] = False
-    print(f"dp[\"bot_enabled\"] = {dp["bot_enabled"]}")
+    dp_bot_enabled: bool = dp["bot_enabled"] # просто чтобы вывести на печать
+    print(f"dp[\"bot_enabled\"] = {dp_bot_enabled}")
 
 
 @router.message(F.text == 'Включить 🟢', FilterIsAdmin())
@@ -128,7 +133,8 @@ async def set_settings_on(message: Message):
     if scheduler.running and scheduler.state == STATE_PAUSED:
         scheduler.resume()
     dp["bot_enabled"] = True
-    print(f"dp[\"bot_enabled\"] = {dp["bot_enabled"]}")
+    dp_bot_enabled: bool = dp["bot_enabled"] # просто чтобы вывести на печать
+    print(f"dp[\"bot_enabled\"] = {dp_bot_enabled}")
 
 
 @router.message(F.text == "Выключить и сделать дамп 🔴💾", FilterIsAdmin())
@@ -137,21 +143,22 @@ async def set_settings_off_and_dump(message: Message):
     await message.answer(text=txt, reply_markup=kb.kb_for_admin)
     bot_activity_set(status=False)
     dp["bot_enabled"] = False
-    print(f"dp[\"bot_enabled\"] = {dp["bot_enabled"]}")
+    dp_bot_enabled: bool = dp["bot_enabled"] # просто чтобы вывести на печать
+    print(f"dp[\"bot_enabled\"] = {dp_bot_enabled}")
     print(f'scheduler_task_running в хэндлерах: {loader.scheduler_task_running}')
-
+    
     # Если какая-то задача выполняется и переключила флаг - ждём:
     waiting()
-
+    
     # Останавливаем планировщик:
     scheduler.pause()
-
+    
     # Запускаем дамп в стандартное хранилище S3:
     task_data_dump_s3()
     
     # Запускаем дамп из S3 в S3 cold:
     task_copy_all_s3_to_cold_s3()
-
+    
     txt = 'Выполнено.\n⚠️ВНИМАНИЕ! Бот остаётся отключённым.'
     await message.answer(text=txt, reply_markup=kb.kb_for_admin)
     print(f'scheduler_task_running в хэндлерах в конце: {loader.scheduler_task_running}')
@@ -173,7 +180,6 @@ async def set_settings(message: Message):
 async def set_settings(message: Message, state: FSMContext):
     txt = await rtbr(state)
     await message.answer(text=txt, reply_markup=kb.main)
-
 
 # @router.message()
 # async def last_handler(message: Message):

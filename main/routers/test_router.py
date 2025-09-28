@@ -11,7 +11,8 @@ router = Router(name = '__name__')
 
 @router.message(F.text=='TEST', FilterIsAdmin())
 async def last_handler(message: Message):
-    txt = f"dp[\"bot_enabled\"] = {dp["bot_enabled"]}"
+    dp_bot_enabled: bool = dp["bot_enabled"] # просто чтобы вывести на печать
+    txt = f"dp[\"bot_enabled\"] = {dp_bot_enabled}"
     add_to_history('нажата кнопка TEST: '+ txt)
     await message.answer(text=txt, reply_markup=kb.main)
     
