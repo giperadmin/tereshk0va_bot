@@ -9,6 +9,8 @@ from datetime import datetime
 
 load_dotenv()
 
+BOT_NAME=os.getenv('BOT_NAME')
+
 # Данные для подключения к стандартному хранилищу
 S3_ENDPOINT = os.getenv("S3_ENDPOINT")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
@@ -58,5 +60,5 @@ def copy_all_s3_to_cold_s3():
             data = response["Body"].read()
             
             # Кладём в холодное хранилище
-            key = f'{today}/{now}/{key}'
+            key = f'{today} - {BOT_NAME}/{now}/{key}'
             cold_s3.put_object(Bucket=S3_COLD_BUCKET, Key=key, Body=data)
