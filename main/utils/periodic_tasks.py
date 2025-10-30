@@ -22,10 +22,12 @@ def waiting(tittle: str = '', period: int = 1):
     """
     while loader.scheduler_task_running:
         time.sleep(1)
+        h('ждём-с...')
         print(f'{tittle} ждём-с...')
 
 
 def task_data_sync_s3():
+    h('task_data_sync_s3 запущен')
     # Если какая-то задача с помощью переменной флага отметила свой запуск, то ждём её завершения:
     waiting()
 
@@ -33,7 +35,7 @@ def task_data_sync_s3():
     loader.scheduler_task_running = True
 
     # print(f'началось выполнение планировщика data_dump_s3 flag = {loader.scheduler_task_running}')
-    time.sleep(5)  # todo убрать эту задержку
+    # time.sleep(5)  # todo убрать эту задержку
 
     # Готовим пути:
     s3_pref = PROJECT_NAME + '/' + BOT_NAME + '/' + DB_PATH
@@ -78,6 +80,7 @@ def task_data_dump_s3():
     h('task_data_dump_s3 отработал DUMP')
 
 def task_sync_from_S3_to_local():
+    h('task_sync_from_S3_to_local запущен')
     # Если какая-то задача с помощью переменной флага отметила свой запуск, то ждём её завершения:
     waiting()
 

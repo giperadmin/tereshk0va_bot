@@ -5,7 +5,7 @@ from main.config import DB_PATH
 DIR_PATH = Path() / DB_PATH
 FILE_PATH = Path() / DIR_PATH / "history.txt"
 
-MAX_LINES = 10000  # максимум строк в файле
+MAX_LINES = 100000  # максимум строк в файле
 
 
 def add_to_history(text: str = 'None',
