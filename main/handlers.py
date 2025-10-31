@@ -22,6 +22,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
 from main import loader, waiting, task_data_dump_s3, task_copy_all_s3_to_cold_s3
 from main.routers import last_router
+from main import add_to_history as h
 
 router = Router(name='__name__')
 
@@ -85,6 +86,7 @@ async def test1(message: Message, bot: Bot, state: FSMContext):
                        overwrite=False
                        )
     txt = str(message.from_user.first_name) + ' получил рецепт салата'
+    h(txt)
     await bot.send_message(223852270, text=txt)
 
 
